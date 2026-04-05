@@ -170,5 +170,6 @@ test*/
 test*
 !tests/
 !tests/**
+tests/__pycache__/
 /tmp
 /papers
