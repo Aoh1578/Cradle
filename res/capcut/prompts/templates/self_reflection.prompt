@@ -60,6 +60,8 @@ Based on the history summarization, the last action, the current screenshots and
 - If the overall task was unsuccessful, specify the reason of failure and which steps are missing.
 - If the overall task was successful, ONLY output "SUCCESSFUL".
 
+Visual_Correction: If you realize that your previous observation of the screenshot was incorrect (e.g., you misidentified an object, UI element, or game state), report the correction. If no visual error occurred, output "null".
+
 You should only respond in the format as described below.
 Self_Reflection_Reasoning:
 1. ...
@@ -68,3 +70,11 @@ Self_Reflection_Reasoning:
 
 Success_Detection:
 ...
+
+Visual_Correction:
+null
+OR
+Visual_Correction:
+wrong: what you previously thought you saw
+correct: what was actually on screen
+screen_element: which element was misidentified

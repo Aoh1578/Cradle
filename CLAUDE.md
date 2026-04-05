@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## Git rules
+
+- This is a fork: `aoh1578/cradle`. The upstream repo is `BAAI-Agents/Cradle`.
+- **NEVER push to, open PRs against, or target `BAAI-Agents/Cradle` (upstream) in any way.**
+- All work happens on branches in `aoh1578/cradle`. PRs target `aoh1578/cradle:main`.
+- Always push to `origin` (`aoh1578/cradle`), never to `upstream`.
+
 ## gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.

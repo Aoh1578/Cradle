@@ -1,0 +1,7 @@
+{
+    "provider_type": "openai_compat",
+    "key_var": "OPENROUTER_API_KEY",
+    "comp_model": "qwen/qwen3.6-plus:free",
+    "base_url": "https://openrouter.ai/api/v1",
+    "is_azure": false
+}

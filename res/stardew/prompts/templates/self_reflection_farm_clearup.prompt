@@ -43,9 +43,19 @@ Reasoning: You need to answer the following questions step by step to get some r
 5. Is the target task completed? Give your reasons.
 6. Do you think the subtask is reasonable? Give your reasons.
 
+Visual_Correction: If you realize that your previous observation of the screenshot was incorrect (e.g., you misidentified an object, UI element, or game state), report the correction. If no visual error occurred, output "null".
+
 You should only respond in the format as described below.
 Reasoning:
 1. ...
 2. ...
 3. ...
 ...
+
+Visual_Correction:
+null
+OR
+Visual_Correction:
+wrong: what you previously thought you saw
+correct: what was actually on screen
+screen_element: which element was misidentified
