@@ -14,6 +14,40 @@ config = Config()
 logger = Logger()
 
 
+def _extract_visual_corrections(response, memory):
+    """Extract visual corrections from self-reflection LLM response and store in memory.
+
+    Looks for a 'visual_correction' field in the response dict. If present and
+    non-null, stores it in the VISUAL_CORRECTIONS_MEM_BUCKET.
+
+    Correction format:
+        {
+            "wrong": "what was incorrectly perceived",
+            "correct": "what was actually on screen",
+            "screen_element": "which UI/game element was misidentified"
+        }
+    """
+    correction = response.get("visual_correction", None)
+
+    if correction and isinstance(correction, dict):
+        wrong = correction.get("wrong", "")
+        correct = correction.get("correct", "")
+        screen_element = correction.get("screen_element", "")
+
+        if wrong and correct:
+            # Store without FIFO eviction — corrections persist for the session
+            if constants.VISUAL_CORRECTIONS_MEM_BUCKET not in memory.recent_history:
+                memory.recent_history[constants.VISUAL_CORRECTIONS_MEM_BUCKET] = []
+
+            memory.recent_history[constants.VISUAL_CORRECTIONS_MEM_BUCKET].append({
+                "wrong": wrong,
+                "correct": correct,
+                "screen_element": screen_element,
+            })
+
+            logger.write(f"Visual correction logged: '{wrong}' -> '{correct}' ({screen_element})")
+
+
 class SelfReflectionPreprocessProvider(BaseProvider):
 
     def __init__(self, *args,
@@ -332,23 +366,27 @@ class SelfReflectionPostprocessProvider(BaseProvider):
             "self_reflection_reasoning": processed_response.get("reasoning", "")
         })
 
+        _extract_visual_corrections(response, self.memory)
+
         self.memory.update_info_history(processed_response)
 
         return processed_response
 
 
-class RDR2SelfReflectionPostprocessProvider(BaseProvider):
+class GameSelfReflectionPostprocessProvider(BaseProvider):
+    """Unified self-reflection postprocessor for game environments (RDR2, Stardew, etc.)."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, env_name="Game", **kwargs):
 
         super().__init__(*args, **kwargs)
 
+        self.env_name = env_name
         self.memory = LocalMemory()
 
 
     def __call__(self, response: Dict):
 
-        logger.write(f'RDR2 Self Reflection Postprocess')
+        logger.write(f'{self.env_name} Self Reflection Postprocess')
 
         processed_response = deepcopy(response)
 
@@ -362,36 +400,19 @@ class RDR2SelfReflectionPostprocessProvider(BaseProvider):
             "pre_self_reflection_reasoning": self_reflection_reasoning
         })
 
+        _extract_visual_corrections(response, self.memory)
+
         self.memory.update_info_history(processed_response)
 
         return processed_response
 
 
-class StardewSelfReflectionPostprocessProvider(BaseProvider):
-
+# Backward-compatible subclasses (separate Singleton instances per environment)
+class RDR2SelfReflectionPostprocessProvider(GameSelfReflectionPostprocessProvider):
     def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        self.memory = LocalMemory()
+        super().__init__(*args, env_name="RDR2", **kwargs)
 
 
-    def __call__(self, response: Dict):
-
-        logger.write(f'Stardew Self Reflection Postprocess')
-
-        processed_response = deepcopy(response)
-
-        if 'reasoning' in response:
-            self_reflection_reasoning = response['reasoning']
-        else:
-            self_reflection_reasoning = ""
-
-        processed_response.update({
-            "self_reflection_reasoning": self_reflection_reasoning,
-            "pre_self_reflection_reasoning": self_reflection_reasoning
-        })
-
-        self.memory.update_info_history(processed_response)
-
-        return processed_response
+class StardewSelfReflectionPostprocessProvider(GameSelfReflectionPostprocessProvider):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, env_name="Stardew", **kwargs)

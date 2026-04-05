@@ -22,6 +22,34 @@ from cradle.utils.image_utils import segment_toolbar, segment_new_icon, segement
 config = Config()
 logger = Logger()
 
+
+def _inject_visual_corrections(memory, max_corrections=5):
+    """Retrieve visual corrections from memory and format as prompt context.
+
+    Returns a dict with 'visual_notes' key to merge into processed_params.
+    If no corrections exist, returns an empty visual_notes string (no-op for prompt).
+
+    Args:
+        memory: LocalMemory instance
+        max_corrections: Maximum number of corrections to inject (top-K, most recent)
+    """
+    corrections = memory.recent_history.get(constants.VISUAL_CORRECTIONS_MEM_BUCKET, [])
+
+    if not corrections:
+        return {"visual_notes": ""}
+
+    # Take the most recent corrections up to max_corrections
+    selected = corrections[-max_corrections:]
+
+    notes_lines = ["Visual notes from prior observations (avoid these mistakes):"]
+    for c in selected:
+        screen_el = c.get("screen_element", "unknown element")
+        wrong = c.get("wrong", "")
+        correct = c.get("correct", "")
+        notes_lines.append(f"- {screen_el}: previously misidentified as '{wrong}', actually '{correct}'")
+
+    return {"visual_notes": "\n".join(notes_lines)}
+
 class InformationGatheringPreprocessProvider(BaseProvider):
 
     def __init__(self, *args,
@@ -70,6 +98,8 @@ class InformationGatheringPreprocessProvider(BaseProvider):
         if self.use_task_guidance:
             task_description = self.task_guidance.get_task_guidance(use_last=False)
             processed_params["task_description"] = task_description
+
+        processed_params.update(_inject_visual_corrections(self.memory))
 
         self.memory.working_area.update(processed_params)
 
@@ -187,6 +217,8 @@ class RDR2InformationGatheringPreprocessProvider(BaseProvider):
             "gather_information_configurations": gather_information_configurations
         }
 
+        processed_params.update(_inject_visual_corrections(self.memory))
+
         self.memory.working_area.update(processed_params)
 
         return processed_params
@@ -266,6 +298,8 @@ class StardewInformationGatheringPreprocessProvider(BaseProvider):
             "video_clip_path": video_clip_path,
             "gather_information_configurations": gather_information_configurations
         }
+
+        processed_params.update(_inject_visual_corrections(self.memory))
 
         self.memory.working_area.update(processed_params)
 

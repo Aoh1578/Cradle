@@ -40,6 +40,7 @@ PROVIDER_SETTING_KEY_VAR = "key_var"
 PROVIDER_SETTING_EMB_MODEL = "emb_model"
 PROVIDER_SETTING_COMP_MODEL = "comp_model"
 PROVIDER_SETTING_IS_AZURE = "is_azure"
+PROVIDER_SETTING_BASE_URL = "base_url"       # OpenAI-compatible endpoint override
 PROVIDER_SETTING_BASE_VAR = "base_var"       # Azure-speficic setting
 PROVIDER_SETTING_API_VERSION = "api_version" # Azure-speficic setting
 PROVIDER_SETTING_DEPLOYMENT_MAP = "models"   # Azure-speficic setting
@@ -92,7 +93,7 @@ class OpenAIProvider(LLMProvider, EmbeddingProvider):
 
         key_var_name = conf_dict[PROVIDER_SETTING_KEY_VAR]
 
-        if conf_dict[PROVIDER_SETTING_IS_AZURE]:
+        if conf_dict.get(PROVIDER_SETTING_IS_AZURE, False):
 
             key = os.getenv(key_var_name)
             endpoint_var_name = conf_dict[PROVIDER_SETTING_BASE_VAR]
@@ -105,9 +106,13 @@ class OpenAIProvider(LLMProvider, EmbeddingProvider):
             )
         else:
             key = os.getenv(key_var_name)
-            self.client = OpenAI(api_key=key)
+            base_url = conf_dict.get(PROVIDER_SETTING_BASE_URL, None)
+            if base_url:
+                self.client = OpenAI(api_key=key, base_url=base_url)
+            else:
+                self.client = OpenAI(api_key=key)
 
-        self.embedding_model = conf_dict[PROVIDER_SETTING_EMB_MODEL]
+        self.embedding_model = conf_dict.get(PROVIDER_SETTING_EMB_MODEL, "")
         self.llm_model = conf_dict[PROVIDER_SETTING_COMP_MODEL]
 
         return conf_dict

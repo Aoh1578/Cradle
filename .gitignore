@@ -168,5 +168,7 @@ runs/
 /res/tool/subfinder/
 test*/
 test*
+!tests/
+!tests/**
 /tmp
 /papers

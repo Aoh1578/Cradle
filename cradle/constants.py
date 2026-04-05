@@ -155,6 +155,7 @@ IMAGES_MEM_BUCKET = 'image'
 NO_IMAGE = '[None]'
 SKIIL_LIB_MEM_BUCKET = 'skill_library'
 SUMMARIZATION_MEM_BUCKET = 'summarization'
+VISUAL_CORRECTIONS_MEM_BUCKET = 'visual_corrections'
 
 # LLM message type constants
 MESSAGE_CONSTRUCTION_MODE_TRIPART = 'tripartite'
